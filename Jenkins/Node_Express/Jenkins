@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_CREDENTIALS_ID = 'dockerhub'
+        PROJECT_NAME = 'node-express-mongodb'
+        IMAGE_TAG = 'latest'
+        DOCKERHUB_USERNAME = 'your-dockerhub-username' // or get from credentials
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                dir('node-express-mongodb') {
+                    // Working directory is set for subsequent steps
+                }
+            }
+        }
+        
+        stage('Build and Test') {
+            steps {
+                dir('node-express-mongodb') {
+                    script {
+                        build()
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                dir('node-express-mongodb') {
+                    script {
+                        docker_build("${PROJECT_NAME}", "${IMAGE_TAG}", "${DOCKERHUB_USERNAME}")
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+                script {
+                    docker_push("${PROJECT_NAME}", "${IMAGE_TAG}", "${DOCKERHUB_USERNAME}")
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Pipeline completed - cleaning up workspace'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}

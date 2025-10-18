@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKERHUB_CREDENTIALS_ID = 'dockerhub'
+        PROJECT_NAME = 'django-notes-app'
+        IMAGE_TAG = 'latest'
+        DOCKERHUB_USERNAME = 'your-dockerhub-username' // or get from credentials
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                dir('Github-Actions-Project') {
+                    // Working directory is set for subsequent steps
+                }
+            }
+        }
+        
+        stage('Build and Test') {
+            steps {
+                dir('Github-Actions-Project') {
+                    script {
+                        build()
+                    }
+                }
+            }
+        }
+        
+  
+    
+    post {
+        always {
+            echo 'Pipeline completed - cleaning up workspace'
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
+}
